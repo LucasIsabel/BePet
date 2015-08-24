@@ -1,6 +1,10 @@
 package helloworld.teste.com.bepet;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -23,8 +27,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.HashMap;
 import java.util.List;
 
 import helloworld.teste.com.bepet.interfacesRetrofit.OngService;
@@ -47,6 +53,10 @@ public class MainActivity extends AppCompatActivity
      */
     private CharSequence mTitle;
 
+    private HashMap<String, ONG> idsMarkers = new HashMap<String, ONG>();
+
+    private ONG ongSelecionada;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +71,29 @@ public class MainActivity extends AppCompatActivity
                 (DrawerLayout) findViewById(R.id.drawer_layout));
     }
 
+    public void showOptionsDialog(){
+        AlertDialog.Builder options = new AlertDialog.Builder(this);
+        options.setMessage("o que deseja fazeer?");
+        options.setPositiveButton("Ligar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent i = new Intent(Intent.ACTION_CALL);
+                i.setData(Uri.parse("tel:" + ongSelecionada.telefone));
+                startActivity(i);
+            }
+        });
+        options.setNegativeButton("Site", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(ongSelecionada.url));
+                startActivity(i);
+            }
+        });
+        options.setNeutralButton("Voltar", null);
+        options.create().show();
+    }
+
     @Override
     public void onNavigationDrawerItemSelected(int position) {
         Log.e("BEPET", "position: " + position);
@@ -71,6 +104,13 @@ public class MainActivity extends AppCompatActivity
                 mapFrag.getMapAsync(new OnMapReadyCallback() {
                     @Override
                     public void onMapReady(final GoogleMap gMap) {
+                        gMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+                            @Override
+                            public void onInfoWindowClick(Marker marker) {
+                                ongSelecionada = idsMarkers.get(marker.getId());
+                                showOptionsDialog();
+                            }
+                        });
 
                         RestAdapter restAdapter = new RestAdapter.Builder()
                            	    .setEndpoint("http://1-dot-doacaoanimais-1040.appspot.com/")
@@ -89,7 +129,8 @@ public class MainActivity extends AppCompatActivity
                                                      opt1.position(new LatLng(ong.latitude, ong.longitude));
                                                      opt1.title(ong.title);
                                                      opt1.snippet(ong.snnipet);
-                                                     gMap.addMarker(opt1);
+                                                     idsMarkers.put(gMap.addMarker(opt1).getId(), ong);
+                                                     //gMap.addMarker(opt1);
                                                  }
                                              }
                                          }

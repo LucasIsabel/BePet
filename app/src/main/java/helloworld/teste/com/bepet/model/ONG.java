@@ -9,5 +9,7 @@ public class ONG {
     public double longitude;
     public String title;
     public String snnipet;
+    public String url;
+    public String telefone;
 
 }
