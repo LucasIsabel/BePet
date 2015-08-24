@@ -25,6 +25,15 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.List;
+
+import helloworld.teste.com.bepet.interfacesRetrofit.OngService;
+import helloworld.teste.com.bepet.model.ONG;
+import helloworld.teste.com.bepet.model.OngContainer;
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
@@ -61,30 +70,31 @@ public class MainActivity extends AppCompatActivity
                 SupportMapFragment mapFrag = new SupportMapFragment();
                 mapFrag.getMapAsync(new OnMapReadyCallback() {
                     @Override
-                    public void onMapReady(GoogleMap gMap) {
-                        MarkerOptions opt1 = new MarkerOptions();
-                        opt1.position(new LatLng(-23.596268, -46.646922));
-                        opt1.title("Pet Shop");
-                        opt1.snippet("Pet Shop Bla Bla");
-                        gMap.addMarker(opt1);
+                    public void onMapReady(final GoogleMap gMap) {
 
-                        MarkerOptions opt2 = new MarkerOptions();
-                        opt2.position(new LatLng(-23.565746, -46.577571));
-                        opt2.title("Meu Amigo Pet");
-                        opt2.snippet("Meu amigo pet!");
-                        gMap.addMarker(opt2);
+                        RestAdapter restAdapter = new RestAdapter.Builder()
+                           	    .setEndpoint("http://1-dot-doacaoanimais-1040.appspot.com/")
+                                .build();
 
-                        MarkerOptions opt3 = new MarkerOptions();
-                        opt3.position(new LatLng(-23.614042, -46.527617));
-                        opt3.title("SOS Dog");
-                        opt3.snippet("Me ajude por favor.");
-                        gMap.addMarker(opt3);
+                        OngService service = restAdapter.create(OngService.class);
+                        service.listOngs(new Callback<OngContainer>() {
+                                             @Override
+                                             public void failure(RetrofitError error) {
+                                             }
 
-                        MarkerOptions opt4 = new MarkerOptions();
-                        opt4.position(new LatLng(-23.550080, -46.555793));
-                        opt4.title("Apoio a Vida");
-                        opt4.snippet("Quatro patas e uma alma");
-                        gMap.addMarker(opt4);
+                                             @Override
+                                             public void success(OngContainer c, retrofit.client.Response response) {
+                                                 for (ONG ong : c.ongs){
+                                                     MarkerOptions opt1 = new MarkerOptions();
+                                                     opt1.position(new LatLng(ong.latitude, ong.longitude));
+                                                     opt1.title(ong.title);
+                                                     opt1.snippet(ong.snnipet);
+                                                     gMap.addMarker(opt1);
+                                                 }
+                                             }
+                                         }
+                        );
+
                         gMap.setMyLocationEnabled(true);
                     }
                 });
